@@ -590,6 +590,41 @@ def score_contour_web(contour, total_area, img_width, img_height):
     return total_score
 
 
+def auto_crop_margins(img):
+    """Recorta márgenes uniformes detectando cambios de color significativos"""
+    h, w = img.shape[:2]
+
+    # Convertir a escala de grises
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Calcular varianza en cada fila y columna
+    row_var = np.var(gray, axis=1)
+    col_var = np.var(gray, axis=0)
+
+    # Umbral: si la varianza es muy baja, probablemente es margen uniforme
+    row_threshold = np.percentile(row_var, 25)  # 25% más bajo = márgenes
+    col_threshold = np.percentile(col_var, 25)
+
+    # Encontrar primeras y últimas filas/columnas con contenido
+    content_rows = np.where(row_var > row_threshold)[0]
+    content_cols = np.where(col_var > col_threshold)[0]
+
+    if len(content_rows) > 0 and len(content_cols) > 0:
+        top = content_rows[0]
+        bottom = content_rows[-1] + 1
+        left = content_cols[0]
+        right = content_cols[-1] + 1
+
+        # Aplicar solo si el recorte es > 2% en algún lado
+        crop_ratio = ((right - left) * (bottom - top)) / (w * h)
+
+        if crop_ratio < 0.98:
+            cropped = img[top:bottom, left:right]
+            return cropped
+
+    return img
+
+
 def detect_book_cover(image_data, min_area_ratio=0.1):
     """Detecta portada usando múltiples estrategias"""
 
@@ -656,8 +691,9 @@ def detect_book_cover(image_data, min_area_ratio=0.1):
 
     if not candidates:
         # No se encontraron contornos rectangulares - asumir portada digital
-        # Devolver la imagen completa sin transformación de perspectiva
-        img_rgb = cv2.cvtColor(original, cv2.COLOR_BGR2RGB)
+        # Intentar recortar márgenes automáticamente
+        cropped = auto_crop_margins(original)
+        img_rgb = cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB)
         return Image.fromarray(img_rgb)
 
     # Evaluar candidatos con scoring
@@ -673,7 +709,9 @@ def detect_book_cover(image_data, min_area_ratio=0.1):
 
     if book_contour is None:
         # No se encontró un contorno con score adecuado - asumir portada digital
-        img_rgb = cv2.cvtColor(original, cv2.COLOR_BGR2RGB)
+        # Intentar recortar márgenes automáticamente
+        cropped = auto_crop_margins(original)
+        img_rgb = cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB)
         return Image.fromarray(img_rgb)
 
     # Ordenar puntos y extraer portada
