@@ -655,7 +655,10 @@ def detect_book_cover(image_data, min_area_ratio=0.1):
             candidates.append(approx)
 
     if not candidates:
-        raise ValueError("No se encontraron contornos rectangulares. Ajusta la sensibilidad.")
+        # No se encontraron contornos rectangulares - asumir portada digital
+        # Devolver la imagen completa sin transformación de perspectiva
+        img_rgb = cv2.cvtColor(original, cv2.COLOR_BGR2RGB)
+        return Image.fromarray(img_rgb)
 
     # Evaluar candidatos con scoring
     best_score = 0
@@ -669,7 +672,9 @@ def detect_book_cover(image_data, min_area_ratio=0.1):
             book_contour = approx
 
     if book_contour is None:
-        raise ValueError("No se encontró una portada adecuada. Intenta ajustar la sensibilidad.")
+        # No se encontró un contorno con score adecuado - asumir portada digital
+        img_rgb = cv2.cvtColor(original, cv2.COLOR_BGR2RGB)
+        return Image.fromarray(img_rgb)
 
     # Ordenar puntos y extraer portada
     pts = book_contour.reshape(4, 2)
@@ -784,6 +789,7 @@ if __name__ == '__main__':
         print("📱 Abre tu navegador en: http://localhost:5000")
     print("⏹️  Presiona Ctrl+C para detener")
     print("")
-    print("💡 Esta versión detecta automáticamente el contorno rectangular de portadas físicas")
+    print("💡 Soporta fotos de libros físicos Y portadas digitales")
+    print("📖 Detección automática: física (con bordes) o digital (imagen completa)")
 
     app.run(debug=debug, host='0.0.0.0', port=port)
