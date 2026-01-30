@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: bookeditor
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python book_cover_web.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.18
