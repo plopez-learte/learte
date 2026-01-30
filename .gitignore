@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Archivos temporales
+*.tmp
+*.temp
+.DS_Store
+
+# Resultados de prueba
+test_*.png
+resultado_*.png
+procesado_*.png
+debug_*.jpg
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Imágenes de ejemplo grandes
+ejemplos/*.png
+ejemplos/*.jpg
+
+# Versiones antiguas
+old_versions/
